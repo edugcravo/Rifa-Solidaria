@@ -674,6 +674,9 @@
                         <p class="text-lg font-semibold text-gray-700 mb-2">Seu(s) número(s) escolhido(s): <span id="modalChosenNumbersSummary" class="font-bold text-primary-blue"></span></p>
                         <p class="text-xl font-bold text-gray-800 mb-4">Total a Pagar: <span id="modalTotalCost" class="font-bold text-secondary-purple">R$ 0,00</span></p>
                         
+                        <!-- Mensagem de erro específica do modal -->
+                        <div id="modalMessage" class="message hidden mb-4"></div>
+
                         <div id="reservationForm" class="input-group">
                             <input type="text" id="modalUserName" placeholder="Seu Nome Completo">
                             <input type="text" id="modalUserCpf" placeholder="Seu CPF (apenas números)">
@@ -818,10 +821,10 @@
         // CHAVE PIX (exemplo: CPF, e-mail, telefone, chave aleatória)
         const PIX_KEY = '41996358674'; // <<< MUDAR AQUI PARA A SUA CHAVE PIX!
 
-        // URLs das imagens dinâmicas
-        const IMAGE_BRABO = 'animal.jpeg'; // Imagem para 0 números selecionados
-        const IMAGE_FELIZ = 'animal.jpeg'; // Imagem para 1-5 números selecionados
-        const IMAGE_MUITO_FELIZ = 'animal.jpeg'; // Imagem para >5 números selecionados
+        // URLs das imagens dinâmicas (use URLs de imagens reais ou placeholders que representem o sentimento)
+        const IMAGE_BRABO = 'animal.jpeg'; // Imagem para 0 números selecionados (vermelho)
+        const IMAGE_FELIZ = 'animal.jpeg'; // Imagem para 1-5 números selecionados (verde)
+        const IMAGE_MUITO_FELIZ = 'animal.jpeg'; // Imagem para >5 números selecionados (roxo)
 
 
         // --- Elementos do DOM ---
@@ -856,6 +859,8 @@
         const pixKeyDisplay = document.getElementById('pixKeyDisplay'); // Onde a chave PIX será exibida
         const copyPixBtn = document.getElementById('copyPixBtn'); // Botão para copiar a chave PIX
         const modalSendWhatsappBtn = document.getElementById('modalSendWhatsappBtn'); // Novo botão para enviar WhatsApp
+
+        const modalMessageDiv = document.getElementById('modalMessage'); // Novo elemento para mensagens dentro do modal
 
         let currentSelectedNumbers = []; // Armazena os números selecionados no grid (agora um array)
 
@@ -899,6 +904,27 @@
             }
             setTimeout(() => {
                 globalMessageDiv.classList.add('hidden');
+            }, 10000); // Mensagem some após 10 segundos
+        }
+
+        /**
+         * Exibe uma mensagem dentro do modal de reserva.
+         * @param {string} msg - A mensagem a ser exibida.
+         * @param {boolean} isError - Se a mensagem é de erro.
+         * @param {boolean} isSuccess - Se a mensagem é de sucesso.
+         */
+        function showModalMessage(msg, isError = false, isSuccess = false) {
+            modalMessageDiv.textContent = msg;
+            modalMessageDiv.classList.remove('hidden', 'error', 'success', 'info');
+            if (isError) {
+                modalMessageDiv.classList.add('error');
+            } else if (isSuccess) {
+                modalMessageDiv.classList.add('success');
+            } else {
+                modalMessageDiv.classList.add('info');
+            }
+            setTimeout(() => {
+                modalMessageDiv.classList.add('hidden');
             }, 10000); // Mensagem some após 10 segundos
         }
 
@@ -1001,9 +1027,12 @@
         function updateNumbersGrid(allNumbers) {
             numbersGrid.innerHTML = '';
             let hasAvailableNumbers = false;
-            currentSelectedNumbers = []; // Limpa a seleção ao atualizar o grid
-            updateSelectionSummary(); // Atualiza o display
+            // Não limpa currentSelectedNumbers aqui, para manter a seleção do usuário
+            // A limpeza e re-seleção ocorre apenas se houver um conflito na transação
+            // ou se o modal for fechado explicitamente.
 
+            // Re-seleciona os números que ainda estão em currentSelectedNumbers e disponíveis
+            const numbersToKeepSelected = [];
             for (let i = 1; i <= MAX_TICKETS; i++) {
                 const numberData = allNumbers.find(n => n.number === i);
                 const numberBox = document.createElement('div');
@@ -1019,21 +1048,28 @@
                     numberBox.addEventListener('click', () => {
                         const num = parseInt(numberBox.textContent);
                         if (numberBox.classList.contains('selected')) {
-                            // Se já estiver selecionado, deseleciona
                             numberBox.classList.remove('selected');
                             currentSelectedNumbers = currentSelectedNumbers.filter(n => n !== num);
                         } else {
-                            // Se não estiver selecionado, seleciona
                             numberBox.classList.add('selected');
                             currentSelectedNumbers.push(num);
                         }
-                        currentSelectedNumbers.sort((a, b) => a - b); // Mantém a ordem
+                        currentSelectedNumbers.sort((a, b) => a - b);
                         updateSelectionSummary();
                     });
                     hasAvailableNumbers = true;
+                    // Se o número estava selecionado e ainda está disponível, mantém a seleção visual
+                    if (currentSelectedNumbers.includes(i)) {
+                        numberBox.classList.add('selected');
+                        numbersToKeepSelected.push(i);
+                    }
                 }
                 numbersGrid.appendChild(numberBox);
             }
+            // Atualiza currentSelectedNumbers para remover os que foram tomados por outros
+            currentSelectedNumbers = numbersToKeepSelected;
+            updateSelectionSummary();
+
 
             if (!hasAvailableNumbers) {
                 noAvailableNumbersMsg.classList.remove('hidden');
@@ -1238,6 +1274,7 @@
                 pixPaymentSection.classList.add('hidden');
                 modalUserNameInput.value = '';
                 modalUserCpfInput.value = '';
+                modalMessageDiv.classList.add('hidden'); // Esconde qualquer mensagem anterior do modal
 
                 reserveModal.classList.remove('hidden');
             } else {
@@ -1261,6 +1298,7 @@
             // Garante que o formulário de reserva esteja visível ao fechar o modal
             reservationForm.classList.remove('hidden');
             pixPaymentSection.classList.add('hidden');
+            modalMessageDiv.classList.add('hidden'); // Esconde qualquer mensagem ao fechar
         });
 
         // Validação de CPF para aceitar apenas números
@@ -1277,15 +1315,15 @@
             const selectedNumbersToReserve = [...currentSelectedNumbers]; // Cria uma cópia para a transação
 
             if (!name || !cpf) {
-                showGlobalMessage('Por favor, preencha seu Nome Completo e CPF.', true);
+                showModalMessage('Por favor, preencha seu Nome Completo e CPF.', true); // Mensagem no modal
                 return;
             }
             if (!/^\d{11}$/.test(cpf)) {
-                showGlobalMessage('CPF inválido. Digite apenas os 11 números.', true);
+                showModalMessage('CPF inválido. Digite apenas os 11 números.', true); // Mensagem no modal
                 return;
             }
             if (selectedNumbersToReserve.length === 0) {
-                showGlobalMessage('Nenhum número selecionado para reserva.', true);
+                showModalMessage('Nenhum número selecionado para reserva.', true); // Mensagem no modal
                 return;
             }
 
@@ -1303,7 +1341,7 @@
                     console.log("Login anônimo realizado para reserva.");
                 } catch (error) {
                     console.error("Erro ao autenticar anonimamente para reserva:", error);
-                    showGlobalMessage("Erro ao iniciar sessão para reservar. Tente novamente.", true);
+                    showModalMessage("Erro ao iniciar sessão para reservar. Tente novamente.", true); // Mensagem no modal
                     return;
                 }
             }
@@ -1335,7 +1373,7 @@
 
                     if (numbersAlreadyTaken.length > 0) {
                         // Se algum número já estava tomado, a transação deve ser abortada.
-                        throw new Error(`Ops! O(s) número(s) ${numbersAlreadyTaken.join(', ')} acabou(aram) de ser reservado(s) por outra pessoa. Por favor, escolha outro(s)!`);
+                        throw new Error(`Ah, não! O(s) número(s) ${numbersAlreadyTaken.join(', ')} acabou(aram) de ser reservado(s) por outra pessoa mais rápida que você! 😅 Por favor, escolha outro(s)!`);
                     }
                 });
 
@@ -1343,15 +1381,15 @@
                 reservationForm.classList.add('hidden');
                 pixPaymentSection.classList.remove('hidden');
                 pixKeyDisplay.textContent = PIX_KEY;
-                showGlobalMessage('Números reservados! Agora realize o pagamento via PIX e depois clique em "Confirmar Pagamento no WhatsApp".', false, false);
+                showModalMessage('Números reservados! Agora realize o pagamento via PIX e depois clique em "Confirmar Pagamento no WhatsApp".', false, false); // Mensagem no modal
 
             } catch (e) {
                 console.error("Erro ao reservar número(s):", e);
-                // Exibe a mensagem de erro específica da transação
+                // Exibe a mensagem de erro específica da transação no modal
                 if (e.message.includes("acabou(aram) de ser reservado(s)")) {
-                    showGlobalMessage(e.message, true);
+                    showModalMessage(e.message, true); // Mensagem no modal
                 } else {
-                    showGlobalMessage(`Erro ao reservar número(s). Tente novamente mais tarde.`, true);
+                    showModalMessage(`Erro ao reservar número(s). Tente novamente mais tarde.`, true); // Mensagem no modal
                 }
                 // Limpa a seleção e atualiza o grid para que o usuário possa escolher novamente
                 currentSelectedNumbers = [];
@@ -1378,10 +1416,10 @@
                 textArea.select();
                 try {
                     document.execCommand('copy');
-                    showGlobalMessage('Chave PIX copiada para a área de transferência!', false, true);
+                    showModalMessage('Chave PIX copiada para a área de transferência!', false, true); // Mensagem no modal
                 } catch (err) {
                     console.error('Falha ao copiar PIX:', err);
-                    showGlobalMessage('Erro ao copiar PIX. Por favor, copie manualmente.', true);
+                    showModalMessage('Erro ao copiar PIX. Por favor, copie manualmente.', true); // Mensagem no modal
                 }
                 document.body.removeChild(textArea);
             }
@@ -1415,6 +1453,7 @@
              // Garante que o formulário de reserva esteja visível ao fechar o modal
             reservationForm.classList.remove('hidden');
             pixPaymentSection.classList.add('hidden');
+            modalMessageDiv.classList.add('hidden'); // Esconde qualquer mensagem
         });
 
         /**
