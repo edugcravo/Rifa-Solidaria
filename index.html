@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rifa Solidária Barboza: Ajude um Amigo!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Definindo variáveis CSS para a paleta de cores premium */
+        :root {
+            --color-primary-blue: #3A60A0; /* Azul Principal mais profundo */
+            --color-secondary-purple: #5A3A90; /* Roxo Secundário mais profundo */
+            --color-neutral-gray: #5C6570; /* Cinza Neutro mais escuro para melhor contraste */
+            --color-highlight-blue: #4AB8D0; /* Azul Claro de Destaque mais vibrante */
+            --color-white: #FFFFFF;
+            --color-light-gray: #E8ECF2; /* Fundo mais suave */
+            --color-lightest-gray: #F5F7F9; /* Fundo para listas/grids */
+            --color-border-light: #DDE2E8;
+            --color-message-bg: #E0ECFF; /* Fundo de mensagem info mais suave */
+            --color-message-text: #3A5080;
+            --color-error-bg: #FDE7E7; /* Fundo de erro mais suave */
+            --color-error-text: #C0392B; /* Texto de erro mais forte */
+            --color-error-border: #F5C6CB;
+            --color-success-green: #27AE60; /* Verde para sucesso mais forte */
+            --color-success-bg: #DFF0D8;
+            --color-success-border: #C8E5BC;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-light-gray);
+            display: flex;
+            flex-direction: column; /* Para empilhar header, main e footer */
+            min-height: 100vh;
+            margin: 0;
+            line-height: 1.6; /* Melhorar legibilidade */
+        }
+
+        .header {
+            background-color: var(--color-white);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky; /* Fixa o header no topo */
+            top: 0;
+            z-index: 1000; /* Garante que o header fique acima de outros elementos */
+            flex-wrap: wrap; /* Permite quebrar em telas pequenas */
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .logo-icon {
+            width: 50px; /* Ajustado para o header */
+            height: 50px; /* Ajustado para o header */
+            background: linear-gradient(45deg, var(--color-primary-blue), var(--color-highlight-blue));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem; /* Ajustado */
+            color: var(--color-white);
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+        .logo-text {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.8rem; /* Ajustado */
+            font-weight: 800;
+            color: var(--color-primary-blue);
+            line-height: 1;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .logo-subtitle {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem; /* Ajustado */
+            color: var(--color-secondary-purple);
+            font-weight: 600;
+        }
+
+        .main-nav ul {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            gap: 1.5rem;
+        }
+        .main-nav li a {
+            color: var(--color-neutral-gray);
+            font-weight: 600;
+            font-size: 1.05rem;
+            text-decoration: none;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .main-nav li a:hover, .main-nav li a.active {
+            background-color: var(--color-lightest-gray);
+            color: var(--color-primary-blue);
+        }
+
+        .content-area {
+            flex-grow: 1; /* Permite que a área de conteúdo ocupe o espaço restante */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Alinha o conteúdo ao topo da área */
+            padding: 40px 20px; /* Padding para o conteúdo principal */
+        }
+
+        .container {
+            background-color: var(--color-white);
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 10px 10px -5px rgba(0, 0, 0, 0.08);
+            padding: 3rem;
+            max-width: 750px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--color-primary-blue);
+            margin-bottom: 1rem;
+            font-size: 2.8rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+        }
+        p.subtitle {
+            color: var(--color-neutral-gray);
+            margin-bottom: 2.5rem;
+            font-size: 1.15rem;
+            line-height: 1.7;
+        }
+
+        .input-group, .button-group {
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+        input[type="text"], input[type="number"], input[type="email"], input[type="password"] {
+            flex-grow: 1;
+            padding: 0.85rem 1.25rem;
+            border: 2px solid var(--color-border-light);
+            border-radius: 0.75rem;
+            font-size: 1.05rem;
+            outline: none;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            min-width: 150px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+        input[type="text"]:focus, input[type="number"]:focus, input[type="email"]:focus, input[type="password"]:focus {
+            border-color: var(--color-highlight-blue);
+            box-shadow: 0 0 0 3px rgba(74, 184, 208, 0.2);
+        }
+        button {
+            padding: 0.85rem 1.75rem;
+            border-radius: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.15s ease, box-shadow 0.3s ease;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, var(--color-highlight-blue) 0%, #3AB0D5 100%);
+            color: var(--color-white);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #3AB0D5 0%, var(--color-highlight-blue) 100%);
+        }
+        .btn-secondary {
+            background: linear-gradient(90deg, var(--color-secondary-purple) 0%, #7A5CB0 100%);
+            color: var(--color-white);
+            border: none;
+        }
+        .btn-secondary:hover {
+            background: linear-gradient(90deg, #7A5CB0 0%, var(--color-secondary-purple) 100%);
+        }
+        .btn-tertiary {
+            background-color: transparent;
+            color: var(--color-primary-blue);
+            border: 2px solid var(--color-primary-blue);
+            box-shadow: none;
+            font-weight: 600;
+        }
+        .btn-tertiary:hover {
+            background-color: var(--color-primary-blue);
+            color: var(--color-white);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .message {
+            padding: 1.25rem;
+            border-radius: 0.75rem;
+            margin-bottom: 2rem;
+            font-weight: 600;
+            border: 1px solid;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+        }
+        .message.error {
+            background-color: var(--color-error-bg);
+            color: var(--color-error-text);
+            border-color: var(--color-error-border);
+        }
+        .message.success {
+            background-color: var(--color-success-bg);
+            color: var(--color-success-green);
+            border-color: var(--color-success-border);
+        }
+        .message.info {
+            background-color: var(--color-message-bg);
+            color: var(--color-message-text);
+            border-color: var(--color-message-text);
+        }
+
+        .participants-list, .available-numbers-grid {
+            background-color: var(--color-lightest-gray);
+            border-radius: 1rem;
+            padding: 2rem;
+            max-height: 350px;
+            overflow-y: auto;
+            border: 1px solid var(--color-border-light);
+            text-align: left;
+            margin-top: 2rem;
+            box-shadow: inset 0 1px 5px rgba(0, 0, 0, 0.05);
+        }
+        .participants-list h2, .available-numbers-grid h2 {
+            color: var(--color-primary-blue);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+        .participants-list ul {
+            list-style: none;
+            padding: 0;
+        }
+        .participants-list li {
+            background-color: var(--color-white);
+            border: 1px solid var(--color-border-light);
+            border-radius: 0.75rem;
+            padding: 1rem 1.25rem;
+            margin-bottom: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+            font-size: 1.05rem;
+        }
+        .participants-list li:last-child {
+            margin-bottom: 0;
+        }
+        .participants-list .status-pending {
+            color: var(--color-error-text);
+            font-weight: 700;
+        }
+        .participants-list .status-confirmed {
+            color: var(--color-success-green);
+            font-weight: 700;
+        }
+
+        /* Grid para números disponíveis */
+        .numbers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(55px, 1fr));
+            gap: 0.75rem;
+            max-height: 250px;
+            overflow-y: auto;
+            padding: 0.75rem;
+        }
+        .number-box {
+            background-color: var(--color-white);
+            border: 1px solid var(--color-border-light);
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            font-size: 1.1rem;
+        }
+        .number-box.available {
+            color: var(--color-primary-blue);
+            background-color: var(--color-success-bg);
+            border-color: var(--color-success-green);
+        }
+        .number-box.available:hover {
+            background-color: var(--color-success-green);
+            color: var(--color-white);
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+        }
+        .number-box.taken {
+            color: var(--color-neutral-gray);
+            background-color: var(--color-lightest-gray);
+            border-color: var(--color-border-light);
+            cursor: not-allowed;
+            opacity: 0.7;
+            box-shadow: none;
+        }
+        .number-box.selected {
+            background-color: var(--color-highlight-blue);
+            color: var(--color-white);
+            border-color: var(--color-highlight-blue);
+            transform: scale(1.05);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .footer {
+            background-color: var(--color-primary-blue);
+            color: var(--color-white);
+            padding: 2.5rem 2rem;
+            text-align: center;
+            margin-top: auto; /* Empurra o rodapé para baixo */
+        }
+        .footer-content {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        .footer-section {
+            flex: 1;
+            min-width: 200px;
+            max-width: 300px;
+            text-align: left;
+        }
+        .footer-section h3 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--color-highlight-blue);
+        }
+        .footer-section p, .footer-section ul {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .footer-section ul {
+            list-style: none;
+            padding: 0;
+        }
+        .footer-section ul li a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        .footer-section ul li a:hover {
+            color: var(--color-white);
+        }
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding-top: 1.5rem;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .cravo-credit {
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Telas */
+        .screen {
+            display: none;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        .screen.active {
+            display: block;
+        }
+
+        /* Animação de Fade-in */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Modal de Reserva */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 2000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-content {
+            background-color: var(--color-white);
+            margin: auto;
+            padding: 2.5rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            position: relative;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        .modal-close {
+            color: var(--color-neutral-gray);
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .modal-close:hover,
+        .modal-close:focus {
+            color: var(--color-error-text);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-content h2 {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--color-primary-blue);
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+        }
+
+        .modal-content .input-group {
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            .main-nav ul {
+                flex-direction: column;
+                align-items: flex-start;
+                width: 100%;
+                gap: 0.5rem;
+            }
+            .main-nav li {
+                width: 100%;
+            }
+            .main-nav li a {
+                display: block;
+                text-align: center;
+            }
+            .container {
+                padding: 2rem;
+            }
+            h1 {
+                font-size: 2.2rem;
+            }
+            p.subtitle {
+                font-size: 1rem;
+            }
+            .logo-icon {
+                width: 45px;
+                height: 45px;
+                font-size: 2rem;
+            }
+            .logo-text {
+                font-size: 1.5rem;
+            }
+            .logo-subtitle {
+                font-size: 0.85rem;
+            }
+            .input-group, .button-group {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            input[type="text"], input[type="number"], input[type="email"], input[type="password"], button {
+                width: 100%;
+            }
+            .numbers-grid {
+                grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
+            }
+            .login-tab-btn {
+                padding: 0.6rem 1rem;
+                font-size: 1rem;
+            }
+            .footer-content {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            .footer-section {
+                text-align: center;
+            }
+            .modal-content {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-wrapper">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">🏍️❤️</div>
+                <div class="logo-group">
+                    <div class="logo-text">BARBOZA</div>
+                    <div class="logo-subtitle">Rifa Solidária</div>
+                </div>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="#" id="navRifa">Rifa</a></li>
+                    <li><a href="#" id="navSobre">Sobre</a></li>
+                    <li><a href="#" id="navAdminLogin">Login Admin</a></li> <!-- Novo link para Login Admin -->
+                </ul>
+            </nav>
+        </header>
+
+        <main class="content-area">
+            <div class="container">
+                <!-- Mensagens globais -->
+                <div id="globalMessage" class="message hidden"></div>
+
+                <!-- Tela da Rifa (Usuário - Tela Principal) -->
+                <div id="userRaffleScreen" class="screen active">
+                    <h1>Sua Sorte, Nossa Esperança!</h1>
+                    <p class="subtitle">Escolha seu número e ajude o Barboza a se recuperar! Cada contribuição é um passo para a vitória.</p>
+
+                    <div class="available-numbers-grid">
+                        <h2>Números Disponíveis:</h2>
+                        <div id="numbersGrid" class="numbers-grid">
+                            <!-- Números serão gerados aqui -->
+                        </div>
+                        <p id="noAvailableNumbersMsg" class="text-gray-500 text-center mt-4 hidden">Todos os números foram reservados! Que sucesso!</p>
+                    </div>
+
+                    <div class="input-group mt-4">
+                        <input type="number" id="selectedNumberInput" placeholder="Número escolhido" min="1" max="100" readonly>
+                        <button id="openReserveModalBtn" class="btn-primary" disabled>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ticket"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>
+                            Reservar Meu Número
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Modal de Reserva de Número (Nome e CPF) -->
+                <div id="reserveModal" class="modal hidden">
+                    <div class="modal-content">
+                        <span class="modal-close" id="closeReserveModalBtn">&times;</span>
+                        <h2>Confirmar Reserva do Número <span id="modalChosenNumber"></span></h2>
+                        <div class="input-group">
+                            <input type="text" id="modalUserName" placeholder="Seu Nome Completo">
+                            <input type="text" id="modalUserCpf" placeholder="Seu CPF (apenas números)">
+                            <button id="confirmReservationBtn" class="btn-primary">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-circle"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+                                Confirmar e Pagar
+                            </button>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-2">Após confirmar, você será direcionado ao WhatsApp para enviar o comprovante de pagamento.</p>
+                    </div>
+                </div>
+
+                <!-- Tela de Login Admin -->
+                <div id="adminLoginScreen" class="screen">
+                    <h1>Login do Administrador</h1>
+                    <p class="subtitle">Acesso restrito para gerenciamento da rifa.</p>
+                    <div class="login-form">
+                        <input type="email" id="adminEmail" placeholder="Email do Administrador">
+                        <input type="password" id="adminPassword" placeholder="Senha do Administrador">
+                        <button id="adminLoginBtn" class="btn-primary">Entrar</button>
+                    </div>
+                </div>
+
+                <!-- Tela do Painel Admin -->
+                <div id="adminPanelScreen" class="screen">
+                    <h1>Painel de Administração</h1>
+                    <p class="subtitle">Bem-vindo, Administrador! Gerencie a rifa aqui.</p>
+                    <button id="logoutAdminBtn" class="btn-tertiary mb-4">Sair do Painel</button>
+
+                    <div class="admin-actions button-group">
+                        <button id="adminDrawWinnerBtn" class="btn-secondary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-party-popper"><path d="M12 12.75a1 1 0 1 1 0 1.5A1 1 0 0 1 12 12.75Z"/><path d="M12 2C9.24 2 7 4.24 7 7v3a5 5 0 0 0 10 0V7c0-2.76-2.24-5-5-5Z"/><path d="M10.5 10.5 8 13l1.5 1.5L12 12l-1.5-1.5Z"/><path d="M13.5 10.5 16 13l-1.5 1.5L12 12l1.5-1.5Z"/><path d="M12 15v5"/><path d="M16 16v4"/><path d="M8 16v4"/><path d="M2 22h20"/><path d="M12 22a7 7 0 0 0 7-7H5a7 7 0 0 0 7 7Z"/></svg>
+                            Sortear Ganhador (Pagos)
+                        </button>
+                        <button id="adminResetRaffleBtn" class="btn-secondary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-ccw"><path d="M3 12a9 9 0 1 0 9-9v1.26a6 6 0 1 1 0 11.48V21a9 9 0 0 0-9-9Z"/><path d="M3 12v.01"/></svg>
+                            Reiniciar Rifa
+                        </button>
+                    </div>
+
+                    <div class="participants-list">
+                        <h2>Todos os Números Reservados:</h2>
+                        <ul id="adminParticipantsUl">
+                            <!-- Participantes e status serão listados aqui -->
+                        </ul>
+                        <p id="noAdminParticipantsMsg" class="text-gray-500 text-center mt-4">Nenhum número reservado ainda.</p>
+                    </div>
+                </div>
+
+                <!-- Tela "Sobre" -->
+                <div id="aboutScreen" class="screen">
+                    <h1>Sobre a Rifa Solidária Barboza</h1>
+                    <p class="subtitle">Conheça a história por trás desta iniciativa e como sua ajuda faz a diferença.</p>
+                    <div class="text-left text-gray-700 space-y-4">
+                        <p>Nosso querido amigo **Barboza** sofreu um grave acidente de moto e está em processo de recuperação. As despesas médicas e de reabilitação são altas, e ele precisa do nosso apoio para voltar à sua vida normal.</p>
+                        <p>Esta rifa foi criada com o objetivo de arrecadar fundos para auxiliar o Barboza nesse momento desafiador. Cada bilhete comprado é um gesto de solidariedade que o ajuda a superar os obstáculos e a se recuperar plenamente.</p>
+                        <p>Ao participar, você não apenas contribui para uma causa nobre, mas também concorre a um **prêmio incrível!** (Insira aqui os detalhes do prêmio, por exemplo: "uma Smart TV de 50 polegadas", "um vale-presente de R$500", "uma cesta de produtos artesanais", etc.).</p>
+                        <p>O sorteio será realizado após todos os números serem reservados (ou em uma data específica, se preferir), e o ganhador será contatado diretamente. Agradecemos imensamente sua colaboração e generosidade!</p>
+                        <p class="font-semibold text-primary-blue">Juntos, podemos fazer a diferença na vida do Barboza!</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Rifa Solidária Barboza</h3>
+                    <p>Apoie a recuperação do nosso amigo Barboza. Cada bilhete faz a diferença!</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Links Rápidos</h3>
+                    <ul>
+                        <li><a href="#" id="footerNavRifa">Rifa</a></li>
+                        <li><a href="#" id="footerNavSobre">Sobre</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Contato</h3>
+                    <p>WhatsApp: <a href="https://wa.me/5541999998888" target="_blank">(41) 99999-8888</a></p>
+                    <p>Email: <a href="mailto:contato@rifabarboza.com">contato@rifabarboza.com</a></p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Rifa Solidária Barboza. Todos os direitos reservados.</p>
+                <p class="cravo-credit">Desenvolvido com carinho (e um pouco de café) por Cravo. A sorte é cega, mas a solidariedade tem visão 20/20! 😉</p>
+            </div>
+        </footer>
+    </div>
+
+    <script type="module">
+        // Importa os módulos necessários do Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, query, onSnapshot, addDoc, deleteDoc, doc, setDoc, getDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Variáveis globais do ambiente Canvas (FORNECIDAS AUTOMATICAMENTE)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = {
+        apiKey: "AIzaSyB_ksyamCoQh3vfwKErOozvnpy7ZeYy5ak",
+        authDomain: "rifabarbozasolidaria.firebaseapp.com",
+        projectId: "rifabarbozasolidaria",
+        storageBucket: "rifabarbozasolidaria.firebasestorage.app",
+        messagingSenderId: "1027678763361",
+        appId: "1:1027678763361:web:b0fb9048a42b68d1396d20"
+        };
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // --- Configurações Firebase ---
+        let app;
+        let db;
+        let auth;
+        let currentUser = null; // Objeto de usuário logado
+        let currentUserId = null;
+        let currentUserRole = 'guest'; // 'guest', 'user', 'admin'
+        let isAuthReady = false; // Flag para indicar que a autenticação está pronta
+
+        // --- Variáveis da Rifa ---
+        const MAX_TICKETS = 100; // Total de números da rifa (1 a 100)
+        // SEU NÚMERO DE WHATSAPP AQUI (com código do país e DDD, sem espaços ou caracteres especiais)
+        const WHATSAPP_NUMBER = '5541992213199'; // <<< MUDAR AQUI PARA O SEU NÚMERO DE WHATSAPP!
+        // EMAIL DO ADMINISTRADOR (para login)
+        const ADMIN_EMAIL = 'edugcravo@hotmail.com'; // <<< MUDAR AQUI PARA O EMAIL DO SEU ADMIN!
+        // ID DO USUÁRIO ADMINISTRADOR (obtido após o primeiro login do admin e verificado no console do Firebase Auth)
+        // É ALTAMENTE RECOMENDADO USAR UM ID REAL DO FIREBASE AUTH PARA MAIOR SEGURANÇA.
+        // Para o primeiro login, você pode deixar vazio e depois de logar, pegar o UID do console e colocar aqui.
+        const ADMIN_UID = 'G2jXmzNyEdbMLMHfPv8FqdnLP153'; // <<< MUDAR AQUI PARA O UID DO SEU ADMIN!
+
+        // --- Elementos do DOM ---
+        const globalMessageDiv = document.getElementById('globalMessage');
+
+        // Telas
+        const userRaffleScreen = document.getElementById('userRaffleScreen'); // Tela principal da rifa para usuários
+        const adminLoginScreen = document.getElementById('adminLoginScreen'); // Nova tela de login para admin
+        const adminPanelScreen = document.getElementById('adminPanelScreen');
+        const aboutScreen = document.getElementById('aboutScreen');
+
+        // Navegação
+        const navRifa = document.getElementById('navRifa');
+        const navSobre = document.getElementById('navSobre');
+        const navAdminLogin = document.getElementById('navAdminLogin'); // Novo link de navegação
+        const footerNavRifa = document.getElementById('footerNavRifa');
+        const footerNavSobre = document.getElementById('footerNavSobre');
+
+        // Modal de Reserva
+        const reserveModal = document.getElementById('reserveModal');
+        const closeReserveModalBtn = document.getElementById('closeReserveModalBtn');
+        const modalChosenNumberSpan = document.getElementById('modalChosenNumber');
+        const modalUserNameInput = document.getElementById('modalUserName');
+        const modalUserCpfInput = document.getElementById('modalUserCpf');
+        const confirmReservationBtn = document.getElementById('confirmReservationBtn');
+        let currentSelectedNumber = null; // Armazena o número selecionado no grid
+
+        // Tela da Rifa (Usuário)
+        const numbersGrid = document.getElementById('numbersGrid');
+        const noAvailableNumbersMsg = document.getElementById('noAvailableNumbersMsg');
+        const selectedNumberInput = document.getElementById('selectedNumberInput');
+        const openReserveModalBtn = document.getElementById('openReserveModalBtn'); // Novo botão para abrir modal
+
+        // Formulário de Admin
+        const adminEmailInput = document.getElementById('adminEmail');
+        const adminPasswordInput = document.getElementById('adminPassword');
+        const adminLoginBtn = document.getElementById('adminLoginBtn');
+
+        // Painel Admin
+        const logoutAdminBtn = document.getElementById('logoutAdminBtn');
+        const adminDrawWinnerBtn = document.getElementById('adminDrawWinnerBtn');
+        const adminResetRaffleBtn = document.getElementById('adminResetRaffleBtn');
+        const adminParticipantsUl = document.getElementById('adminParticipantsUl');
+        const noAdminParticipantsMsg = document.getElementById('noAdminParticipantsMsg');
+
+        // --- Funções Auxiliares ---
+
+        /**
+         * Exibe uma mensagem na tela global.
+         * @param {string} msg - A mensagem a ser exibida.
+         * @param {boolean} isError - Se a mensagem é de erro.
+         * @param {boolean} isSuccess - Se a mensagem é de sucesso.
+         */
+        function showGlobalMessage(msg, isError = false, isSuccess = false) {
+            globalMessageDiv.textContent = msg;
+            globalMessageDiv.classList.remove('hidden', 'error', 'success', 'info');
+            if (isError) {
+                globalMessageDiv.classList.add('error');
+            } else if (isSuccess) {
+                globalMessageDiv.classList.add('success');
+            } else {
+                globalMessageDiv.classList.add('info');
+            }
+            setTimeout(() => {
+                globalMessageDiv.classList.add('hidden');
+            }, 7000);
+        }
+
+        /**
+         * Alterna a visibilidade das telas.
+         * @param {HTMLElement} screenToShow - A tela a ser exibida.
+         * @param {HTMLElement} activeNavLink - O link de navegação que deve ser marcado como ativo.
+         */
+        function showScreen(screenToShow, activeNavLink = null) {
+            // Remove 'active' de todas as telas
+            userRaffleScreen.classList.remove('active');
+            adminLoginScreen.classList.remove('active');
+            adminPanelScreen.classList.remove('active');
+            aboutScreen.classList.remove('active');
+
+            // Adiciona 'active' à tela desejada
+            screenToShow.classList.add('active');
+
+            // Remove 'active' de todos os links de navegação
+            document.querySelectorAll('.main-nav li a').forEach(link => link.classList.remove('active'));
+            document.querySelectorAll('.footer-section ul li a').forEach(link => link.classList.remove('active'));
+
+            // Adiciona 'active' ao link de navegação ativo, se fornecido
+            if (activeNavLink) {
+                activeNavLink.classList.add('active');
+            }
+        }
+
+        /**
+         * Inicializa os números da rifa no Firestore se ainda não existirem.
+         * Isso garante que temos 100 documentos para controlar.
+         */
+        async function initializeRaffleNumbers() {
+            const raffleCollectionRef = collection(db, `artifacts/${appId}/public/data/raffle-numbers`);
+            try {
+                // Verifica se o número 1 existe. Se não, assume que a coleção está vazia e inicializa.
+                const docRef = doc(raffleCollectionRef, "1");
+                const docSnap = await getDoc(docRef);
+
+                if (!docSnap.exists()) {
+                    showGlobalMessage("Inicializando números da rifa... Isso pode levar um momento.", false, false);
+                    const batch = [];
+                    for (let i = 1; i <= MAX_TICKETS; i++) {
+                        batch.push(setDoc(doc(raffleCollectionRef, String(i)), {
+                            number: i,
+                            status: 'available', // 'available', 'pending', 'confirmed'
+                            takenByUid: null,
+                            takenByName: null,
+                            takenByCpf: null,
+                            timestamp: null
+                        }));
+                    }
+                    await Promise.all(batch);
+                    showGlobalMessage("Números da rifa inicializados com sucesso!", false, true);
+                    console.log("Números da rifa inicializados.");
+                } else {
+                    console.log("Números da rifa já existem.");
+                }
+            } catch (e) {
+                console.error("Erro ao inicializar números da rifa:", e);
+                showGlobalMessage("Erro ao inicializar números da rifa. Tente recarregar.", true);
+            }
+        }
+
+        /**
+         * Atualiza a exibição dos números disponíveis para o usuário.
+         * @param {Array} allNumbers - Array de todos os números da rifa do Firestore.
+         */
+        function updateNumbersGrid(allNumbers) {
+            numbersGrid.innerHTML = '';
+            let hasAvailableNumbers = false;
+            selectedNumberInput.value = ''; // Limpa a seleção anterior
+            openReserveModalBtn.disabled = true; // Desabilita o botão de reserva
+
+            for (let i = 1; i <= MAX_TICKETS; i++) {
+                const numberData = allNumbers.find(n => n.number === i);
+                const numberBox = document.createElement('div');
+                numberBox.classList.add('number-box');
+                numberBox.textContent = i;
+
+                if (numberData && numberData.status !== 'available') {
+                    numberBox.classList.add('taken');
+                    numberBox.title = `Reservado por: ${numberData.takenByName || 'Desconhecido'} (Status: ${numberData.status === 'pending' ? 'Pendente' : 'Confirmado'})`;
+                } else {
+                    numberBox.classList.add('available');
+                    numberBox.title = `Clique para reservar o número ${i}`;
+                    numberBox.addEventListener('click', () => {
+                        // Remove a classe 'selected' de todos os outros números
+                        document.querySelectorAll('.number-box.selected').forEach(box => {
+                            box.classList.remove('selected');
+                        });
+                        // Adiciona a classe 'selected' ao número clicado
+                        numberBox.classList.add('selected');
+                        selectedNumberInput.value = i;
+                        currentSelectedNumber = i; // Armazena o número para o modal
+                        openReserveModalBtn.disabled = false;
+                    });
+                    hasAvailableNumbers = true;
+                }
+                numbersGrid.appendChild(numberBox);
+            }
+
+            if (!hasAvailableNumbers) {
+                noAvailableNumbersMsg.classList.remove('hidden');
+            } else {
+                noAvailableNumbersMsg.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Atualiza a lista de participantes no painel admin.
+         * @param {Array} allNumbers - Array de todos os números da rifa do Firestore.
+         */
+        function updateAdminParticipantsList(allNumbers) {
+            adminParticipantsUl.innerHTML = '';
+            const reservedNumbers = allNumbers.filter(n => n.status !== 'available');
+
+            if (reservedNumbers.length === 0) {
+                noAdminParticipantsMsg.classList.remove('hidden');
+            } else {
+                noAdminParticipantsMsg.classList.add('hidden');
+                // Ordena por número para facilitar a visualização
+                reservedNumbers.sort((a, b) => a.number - b.number);
+                reservedNumbers.forEach(p => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <span><strong>Número #${p.number}:</strong> ${p.takenByName || 'N/A'} (CPF: ${p.takenByCpf || 'N/A'})</span>
+                        <span class="${p.status === 'pending' ? 'status-pending' : 'status-confirmed'}">
+                            ${p.status === 'pending' ? 'Pendente' : 'Confirmado'}
+                        </span>
+                        ${p.status === 'pending' ? `<button data-number="${p.number}" class="confirm-payment-btn btn-tertiary ml-2 text-xs">Confirmar Pagamento</button>` : ''}
+                    `;
+                    adminParticipantsUl.appendChild(li);
+                });
+
+                // Adiciona listeners para os botões de confirmar pagamento
+                document.querySelectorAll('.confirm-payment-btn').forEach(button => {
+                    button.addEventListener('click', async (event) => {
+                        const numberToConfirm = parseInt(event.target.dataset.number);
+                        await confirmPayment(numberToConfirm);
+                    });
+                });
+            }
+        }
+
+        // --- Funções Firebase ---
+
+        /**
+         * Inicializa o Firebase e configura o listener de autenticação.
+         */
+        async function initializeFirebase() {
+            try {
+                if (Object.keys(firebaseConfig).length === 0) {
+                    console.error("Firebase config is missing. Please ensure __firebase_config is provided.");
+                    showGlobalMessage("Erro: Configuração do Firebase ausente. Verifique o console.", true);
+                    return;
+                }
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Listener para o estado de autenticação
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        currentUser = user;
+                        currentUserId = user.uid;
+                        console.log("Usuário autenticado:", currentUserId);
+
+                        // Verifica se é admin
+                        if (currentUserId === ADMIN_UID) {
+                            currentUserRole = 'admin';
+                            showGlobalMessage("Bem-vindo, Administrador!", false, true);
+                            showScreen(adminPanelScreen, navAdminLogin); // Admin vai para o painel
+                            await initializeRaffleNumbers(); // Garante que os números estão no Firestore
+                        } else {
+                            // Se o usuário já está logado (pode ser anônimo ou admin que não é o ADMIN_UID)
+                            // Redireciona para a tela da rifa, pois não há login de usuário formal
+                            currentUserRole = 'user'; // Ou 'anonymous_user'
+                            showScreen(userRaffleScreen, navRifa);
+                        }
+                        isAuthReady = true;
+                        setupFirestoreListeners(); // Inicia os listeners do Firestore
+                    } else {
+                        console.log("Nenhum usuário autenticado.");
+                        currentUser = null;
+                        currentUserId = null;
+                        currentUserRole = 'guest';
+                        isAuthReady = true; // Autenticação pronta (sem usuário logado)
+                        showScreen(userRaffleScreen, navRifa); // Usuário vai direto para a tela da rifa
+                        // Tenta login anônimo para permitir leitura/escrita de dados públicos sem login formal
+                        try {
+                            if (initialAuthToken) {
+                                await signInWithCustomToken(auth, initialAuthToken);
+                            } else {
+                                await signInAnonymously(auth);
+                            }
+                            console.log("Login anônimo para leitura/escrita de dados públicos.");
+                        } catch (error) {
+                            console.error("Erro ao tentar login anônimo:", error);
+                            showGlobalMessage("Não foi possível iniciar sessão anônima. Funcionalidades limitadas.", true);
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error("Erro ao inicializar Firebase:", error);
+                showGlobalMessage("Erro crítico: Não foi possível conectar ao Firebase. Verifique sua configuração.", true);
+            }
+        }
+
+        /**
+         * Faz login do administrador.
+         */
+        adminLoginBtn.addEventListener('click', async () => {
+            const email = adminEmailInput.value.trim();
+            const password = adminPasswordInput.value.trim();
+
+            if (!email || !password) {
+                showGlobalMessage('Por favor, digite o email e a senha do administrador.', true);
+                return;
+            }
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                if (user.uid === ADMIN_UID) {
+                    showGlobalMessage('Login de Administrador bem-sucedido!', false, true);
+                    // onAuthStateChanged irá lidar com a transição de tela
+                } else {
+                    // Não é o UID do admin configurado
+                    showGlobalMessage('Credenciais de administrador inválidas.', true);
+                    await signOut(auth); // Força o logout se não for o admin correto
+                }
+            } catch (error) {
+                console.error("Erro ao fazer login de admin:", error);
+                showGlobalMessage('Email ou senha do administrador incorretos.', true);
+            }
+        });
+
+        /**
+         * Faz logout do admin.
+         */
+        logoutAdminBtn.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                showGlobalMessage('Você foi desconectado(a) do painel de administração.', false, true);
+                // onAuthStateChanged irá lidar com a transição de tela para a tela da rifa principal
+            } catch (error) {
+                console.error("Erro ao fazer logout do admin:", error);
+                showGlobalMessage('Erro ao desconectar. Tente novamente.', true);
+            }
+        });
+
+        /**
+         * Configura os listeners do Firestore para atualização em tempo real.
+         */
+        function setupFirestoreListeners() {
+            if (!db || !isAuthReady) {
+                console.warn("Firestore ou autenticação não estão prontos para os listeners.");
+                return;
+            }
+
+            const raffleCollectionRef = collection(db, `artifacts/${appId}/public/data/raffle-numbers`);
+
+            // Listener para todos os números da rifa
+            onSnapshot(raffleCollectionRef, (snapshot) => {
+                const allNumbers = [];
+                snapshot.forEach(doc => {
+                    allNumbers.push({ id: doc.id, ...doc.data() });
+                });
+                // Atualiza a lista de números disponíveis para o usuário
+                updateNumbersGrid(allNumbers); // Sempre atualiza para o usuário
+                // Atualiza a lista de participantes para o admin (se estiver no painel)
+                if (currentUserRole === 'admin') {
+                    updateAdminParticipantsList(allNumbers);
+                }
+                console.log("Dados da rifa atualizados do Firestore.");
+            }, (error) => {
+                console.error("Erro ao ouvir o Firestore (raffle-numbers):", error);
+                showGlobalMessage("Erro ao carregar dados da rifa. Tente recarregar a página.", true);
+            });
+        }
+
+        /**
+         * Abre o modal de reserva de número.
+         */
+        openReserveModalBtn.addEventListener('click', () => {
+            if (currentSelectedNumber) {
+                modalChosenNumberSpan.textContent = currentSelectedNumber;
+                reserveModal.classList.remove('hidden');
+            } else {
+                showGlobalMessage("Por favor, selecione um número primeiro.", true);
+            }
+        });
+
+        /**
+         * Fecha o modal de reserva de número.
+         */
+        closeReserveModalBtn.addEventListener('click', () => {
+            reserveModal.classList.add('hidden');
+            modalUserNameInput.value = '';
+            modalUserCpfInput.value = '';
+            currentSelectedNumber = null; // Limpa o número selecionado
+            selectedNumberInput.value = ''; // Limpa o input na tela principal
+            openReserveModalBtn.disabled = true; // Desabilita o botão
+            // Opcional: Remover a seleção visual do número no grid
+            document.querySelectorAll('.number-box.selected').forEach(box => {
+                box.classList.remove('selected');
+            });
+        });
+
+        /**
+         * Confirma a reserva do número e envia para o WhatsApp.
+         */
+        confirmReservationBtn.addEventListener('click', async () => {
+            const name = modalUserNameInput.value.trim();
+            const cpf = modalUserCpfInput.value.trim();
+            const selectedNumber = currentSelectedNumber; // Pega do estado
+
+            if (!name || !cpf) {
+                showGlobalMessage('Por favor, preencha seu Nome Completo e CPF.', true);
+                return;
+            }
+            if (!/^\d{11}$/.test(cpf)) {
+                showGlobalMessage('CPF inválido. Digite apenas os 11 números.', true);
+                return;
+            }
+            if (!selectedNumber) {
+                showGlobalMessage('Nenhum número selecionado para reserva.', true);
+                return;
+            }
+
+            // Garante que o usuário anônimo está autenticado para poder escrever no Firestore
+            if (!currentUser || currentUserRole === 'guest') {
+                try {
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                    currentUser = auth.currentUser; // Atualiza o currentUser
+                    currentUserId = currentUser.uid;
+                    currentUserRole = 'user'; // Agora é um usuário anônimo
+                    console.log("Login anônimo realizado para reserva.");
+                } catch (error) {
+                    console.error("Erro ao autenticar anonimamente para reserva:", error);
+                    showGlobalMessage("Erro ao iniciar sessão para reservar. Tente novamente.", true);
+                    return;
+                }
+            }
+
+            const numberDocRef = doc(db, `artifacts/${appId}/public/data/raffle-numbers`, String(selectedNumber));
+
+            try {
+                const docSnap = await getDoc(numberDocRef);
+                if (docSnap.exists() && docSnap.data().status !== 'available') {
+                    showGlobalMessage(`Ops! O número #${selectedNumber} já foi reservado. Por favor, escolha outro!`, true);
+                    reserveModal.classList.add('hidden'); // Fecha o modal
+                    return;
+                }
+
+                // Atualiza o documento no Firestore
+                await setDoc(numberDocRef, {
+                    number: selectedNumber,
+                    status: 'pending', // Marca como pendente de pagamento
+                    takenByUid: currentUserId,
+                    takenByName: name,
+                    takenByCpf: cpf,
+                    timestamp: new Date()
+                }, { merge: true }); // Usar merge para não sobrescrever campos se houver outros
+
+                showGlobalMessage(`Parabéns, ${name}! O número #${selectedNumber} foi reservado para você!`, false, true);
+                reserveModal.classList.add('hidden'); // Fecha o modal
+                modalUserNameInput.value = '';
+                modalUserCpfInput.value = '';
+                selectedNumberInput.value = '';
+                openReserveModalBtn.disabled = true;
+                currentSelectedNumber = null; // Limpa o número selecionado
+
+                // Gera o link do WhatsApp para o comprovante
+                const whatsappMessage = `Olá! Acabei de reservar o número ${selectedNumber} na rifa para o Barboza. Meu nome é ${name} (CPF: ${cpf}). Segue o comprovante de pagamento!`;
+                const whatsappLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`;
+                window.open(whatsappLink, '_blank');
+                showGlobalMessage('Agora, por favor, envie o comprovante de pagamento para o WhatsApp para confirmar sua participação! O link já abriu para você. 😉', false, true);
+
+            } catch (e) {
+                console.error("Erro ao reservar número:", e);
+                showGlobalMessage("Erro ao reservar número. Tente novamente mais tarde.", true);
+            }
+        });
+
+        /**
+         * Confirma o pagamento de um número (apenas admin).
+         * @param {number} number - O número a ser confirmado.
+         */
+        async function confirmPayment(number) {
+            if (currentUserRole !== 'admin') {
+                showGlobalMessage("Apenas administradores podem confirmar pagamentos.", true);
+                return;
+            }
+            if (!confirm(`Tem certeza que deseja confirmar o pagamento do número #${number}?`)) {
+                return;
+            }
+
+            const numberDocRef = doc(db, `artifacts/${appId}/public/data/raffle-numbers`, String(number));
+            try {
+                await setDoc(numberDocRef, { status: 'confirmed' }, { merge: true }); // Atualiza apenas o status
+                showGlobalMessage(`Pagamento do número #${number} confirmado com sucesso!`, false, true);
+            } catch (e) {
+                console.error("Erro ao confirmar pagamento:", e);
+                showGlobalMessage("Erro ao confirmar pagamento. Tente novamente.", true);
+            }
+        }
+
+        /**
+         * Sorteia o ganhador (apenas admin).
+         */
+        adminDrawWinnerBtn.addEventListener('click', async () => {
+            if (currentUserRole !== 'admin') {
+                showGlobalMessage("Apenas administradores podem sortear o ganhador.", true);
+                return;
+            }
+
+            if (!confirm('Tem certeza que quer sortear o ganhador? Apenas números com pagamento CONFIRMADO participarão!')) {
+                return;
+            }
+
+            showGlobalMessage('Momento da verdade! Consultando a sorte (e os pagamentos confirmados)... 🔮');
+
+            const raffleCollectionRef = collection(db, `artifacts/${appId}/public/data/raffle-numbers`);
+            const q = query(raffleCollectionRef, where("status", "==", "confirmed"));
+
+            try {
+                const querySnapshot = await getDocs(q);
+                const confirmedParticipants = [];
+                querySnapshot.forEach((d) => {
+                    confirmedParticipants.push(d.data());
+                });
+
+                if (confirmedParticipants.length === 0) {
+                    showGlobalMessage('Ops! Não há números com pagamento CONFIRMADO para sortear. Confirme alguns pagamentos primeiro!', true);
+                    return;
+                }
+
+                // Simula um pequeno atraso para o suspense
+                setTimeout(() => {
+                    const randomIndex = Math.floor(Math.random() * confirmedParticipants.length);
+                    const winner = confirmedParticipants[randomIndex];
+
+                    const funnyWinnerMessages = [
+                        `E o número da sorte (e da solidariedade!) é... ${winner.number}! O sortudo(a) que ajudou o Barboza é: ${winner.takenByName}! Parabéns!`,
+                        `Preparem os tambores! O grande vencedor da rifa do Barboza é... ${winner.takenByName}, com o número ${winner.number}! Que alegria!`,
+                        `A sorte sorriu para... ${winner.takenByName}, que escolheu o número ${winner.number}! Obrigado por ajudar o Barboza!`,
+                        `Temos um campeão! O número ${winner.number} foi o escolhido, e o nome por trás da sorte é ${winner.takenByName}!`,
+                        `Inacreditável! O ganhador da nossa rifa solidária é ${winner.takenByName}, com o número ${winner.number}! 🎉`
+                    ];
+                    const selectedWinnerMessage = funnyWinnerMessages[Math.floor(Math.random() * funnyWinnerMessages.length)];
+
+                    showGlobalMessage(selectedWinnerMessage, false, true);
+
+                    // Opcional: Marcar o ganhador de alguma forma ou mover para outra coleção
+                    // try {
+                    //     await setDoc(doc(db, `artifacts/${appId}/public/data/raffle-numbers`, String(winner.number)), { status: 'won' }, { merge: true });
+                    // } catch (e) {
+                    //     console.error("Erro ao marcar ganhador:", e);
+                    // }
+
+                }, 2000); // 2 segundos de suspense
+
+            } catch (e) {
+                console.error("Erro ao sortear ganhador:", e);
+                showGlobalMessage("Erro ao sortear o ganhador. Verifique o console.", true);
+            }
+        });
+
+        /**
+         * Reinicia a rifa (apenas admin).
+         */
+        adminResetRaffleBtn.addEventListener('click', async () => {
+            if (currentUserRole !== 'admin') {
+                showGlobalMessage("Apenas administradores podem reiniciar a rifa.", true);
+                return;
+            }
+
+            if (confirm('Tem certeza que quer reiniciar a rifa? Isso DELETARÁ TODOS os números reservados e seus dados de participantes! Esta ação é irreversível!')) {
+                try {
+                    showGlobalMessage("Reiniciando a rifa... limpando tudo!", false, false);
+                    const raffleCollectionRef = collection(db, `artifacts/${appId}/public/data/raffle-numbers`);
+                    const querySnapshot = await getDocs(query(raffleCollectionRef));
+
+                    const deletePromises = [];
+                    querySnapshot.forEach((d) => {
+                        deletePromises.push(deleteDoc(doc(db, `artifacts/${appId}/public/data/raffle-numbers`, d.id)));
+                    });
+                    await Promise.all(deletePromises);
+
+                    // Re-inicializa os números após a exclusão
+                    await initializeRaffleNumbers();
+                    showGlobalMessage('Rifa reiniciada com sucesso! Todos os números estão disponíveis novamente.', false, true);
+                } catch (e) {
+                    console.error("Erro ao reiniciar a rifa (limpar Firestore):", e);
+                    showGlobalMessage("Erro ao reiniciar a rifa. Verifique o console.", true);
+                }
+            }
+        });
+
+        // --- Event Listeners para Navegação ---
+        navRifa.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Usuários e admins voltam para a tela da rifa principal ou painel, dependendo do papel
+            if (currentUserRole === 'admin') {
+                showScreen(adminPanelScreen, navRifa);
+            } else { // 'user' ou 'guest'
+                showScreen(userRaffleScreen, navRifa);
+            }
+        });
+
+        navSobre.addEventListener('click', (e) => {
+            e.preventDefault();
+            showScreen(aboutScreen, navSobre);
+        });
+
+        navAdminLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            showScreen(adminLoginScreen, navAdminLogin);
+        });
+
+        footerNavRifa.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (currentUserRole === 'admin') {
+                showScreen(adminPanelScreen, navRifa);
+            } else {
+                showScreen(userRaffleScreen, navRifa);
+            }
+        });
+
+        footerNavSobre.addEventListener('click', (e) => {
+            e.preventDefault();
+            showScreen(aboutScreen, navSobre);
+        });
+
+        // --- Inicialização ---
+        // Inicializa o Firebase e o processo de autenticação ao carregar a página
+        initializeFirebase();
+    </script>
+</body>
+</html>
