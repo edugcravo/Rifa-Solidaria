@@ -640,7 +640,7 @@
                 <!-- Tela da Rifa (Usuário - Tela Principal) -->
                 <div id="userRaffleScreen" class="screen active">
                     <div id="funnyImageContainer" class="funny-image-container">
-                        <img id="dynamicFunnyImage" src="animal.jpeg" alt="Imagem Engraçada/Motivacional" onerror="this.onerror=null;this.src='https://placehold.co/120x120/3A60A0/FFFFFF?text=BARBOZA';">
+                        <img id="dynamicFunnyImage" src="https://placehold.co/120x120/C0392B/FFFFFF?text=BRAVO" alt="Imagem Engraçada/Motivacional" onerror="this.onerror=null;this.src='https://placehold.co/120x120/3A60A0/FFFFFF?text=BARBOZA';">
                     </div>
                     <h1 class="title-mt">Chegou a Rifa que Salva o Barboza (e te dá um prêmio)!</h1>
                     <p class="subtitle">Ele não viu a fechada, mas você pode ver a sorte! Escolha seu(s) número(s) e garanta que o Barboza volte a pilotar (com mais cuidado, prometemos!).</p><br>
@@ -1031,12 +1031,11 @@
         function updateNumbersGrid(allNumbers) {
             numbersGrid.innerHTML = '';
             let hasAvailableNumbers = false;
-            // Não limpa currentSelectedNumbers aqui, para manter a seleção do usuário
-            // A limpeza e re-seleção ocorre apenas se houver um conflito na transação
-            // ou se o modal for fechado explicitamente.
+            // A lista `currentSelectedNumbers` é mantida para a seleção local do usuário.
+            // Ela será filtrada e atualizada para refletir apenas os números que ainda estão disponíveis.
 
-            // Re-seleciona os números que ainda estão em currentSelectedNumbers e disponíveis
-            const numbersToKeepSelected = [];
+            const newCurrentSelectedNumbers = []; // Para reconstruir a lista de números selecionados válidos
+
             for (let i = 1; i <= MAX_TICKETS; i++) {
                 const numberData = allNumbers.find(n => n.number === i);
                 const numberBox = document.createElement('div');
@@ -1044,36 +1043,42 @@
                 numberBox.textContent = i;
 
                 if (numberData && numberData.status !== 'available') {
+                    // Número já foi tomado (pendente ou confirmado)
                     numberBox.classList.add('taken');
                     numberBox.title = `Reservado por: ${numberData.takenByName || 'Desconhecido'} (Status: ${numberData.status === 'pending' ? 'Pendente' : 'Confirmado'})`;
                 } else {
+                    // Número disponível
                     numberBox.classList.add('available');
                     numberBox.title = `Clique para reservar o número ${i}`;
                     numberBox.addEventListener('click', () => {
                         const num = parseInt(numberBox.textContent);
                         if (numberBox.classList.contains('selected')) {
+                            // Desseleciona
                             numberBox.classList.remove('selected');
                             currentSelectedNumbers = currentSelectedNumbers.filter(n => n !== num);
                         } else {
+                            // Seleciona
                             numberBox.classList.add('selected');
                             currentSelectedNumbers.push(num);
                         }
-                        currentSelectedNumbers.sort((a, b) => a - b);
+                        currentSelectedNumbers.sort((a, b) => a - b); // Mantém a ordem
                         updateSelectionSummary();
                     });
                     hasAvailableNumbers = true;
-                    // Se o número estava selecionado e ainda está disponível, mantém a seleção visual
+
+                    // Se este número estava na seleção anterior do usuário e ainda está disponível,
+                    // mantém ele na nova lista de seleção e na visualização.
                     if (currentSelectedNumbers.includes(i)) {
                         numberBox.classList.add('selected');
-                        numbersToKeepSelected.push(i);
+                        newCurrentSelectedNumbers.push(i);
                     }
                 }
                 numbersGrid.appendChild(numberBox);
             }
-            // Atualiza currentSelectedNumbers para remover os que foram tomados por outros
-            currentSelectedNumbers = numbersToKeepSelected;
-            updateSelectionSummary();
 
+            // Atualiza a lista de números selecionados do usuário para remover os que foram pegos por outros
+            currentSelectedNumbers = newCurrentSelectedNumbers;
+            updateSelectionSummary(); // Re-renderiza o resumo com a lista atualizada
 
             if (!hasAvailableNumbers) {
                 noAvailableNumbersMsg.classList.remove('hidden');
@@ -1356,17 +1361,20 @@
                 // Executa a transação do Firestore para reservar os números
                 await runTransaction(db, async (transaction) => {
                     const numbersAlreadyTaken = [];
-                    const numbersToUpdate = []; // Armazena os números que serão reservados
+                    const docSnaps = new Map(); // Para armazenar os snapshots das leituras
 
-                    // FASE 1: LEITURAS
+                    // FASE 1: TODAS AS LEITURAS
                     for (const num of selectedNumbersToReserve) {
                         const numberDocRef = doc(db, `artifacts/${appId}/public/data/raffle-numbers`, String(num));
                         const docSnap = await transaction.get(numberDocRef);
-                        
+                        docSnaps.set(num, docSnap); // Armazena o snapshot
+                    }
+
+                    // Verifica os status APÓS todas as leituras
+                    for (const num of selectedNumbersToReserve) {
+                        const docSnap = docSnaps.get(num);
                         if (docSnap.exists() && docSnap.data().status !== 'available') {
                             numbersAlreadyTaken.push(num);
-                        } else {
-                            numbersToUpdate.push(num); // Adiciona para a fase de escrita
                         }
                     }
 
@@ -1376,8 +1384,8 @@
                         throw new Error(`Ah, não! O(s) número(s) ${numbersAlreadyTaken.join(', ')} acabou(aram) de ser reservado(s) por outra pessoa mais rápida que você! 😅 Por favor, escolha outro(s)!`);
                     }
 
-                    // FASE 2: ESCRITAS (somente se todas as leituras foram bem-sucedidas e não há conflitos)
-                    for (const num of numbersToUpdate) { // Itera apenas sobre os números que podem ser reservados
+                    // FASE 2: TODAS AS ESCRITAS (somente se não houver conflitos detectados na fase de leitura)
+                    for (const num of selectedNumbersToReserve) {
                         const numberDocRef = doc(db, `artifacts/${appId}/public/data/raffle-numbers`, String(num));
                         transaction.set(numberDocRef, {
                             number: num,
