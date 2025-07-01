@@ -54,6 +54,7 @@
             display: flex;
             align-items: center;
             gap: 0.75rem;
+            text-decoration: none; /* Remove sublinhado do link */
         }
         .logo-icon {
             width: 50px; /* Ajustado para o header */
@@ -67,7 +68,24 @@
             color: var(--color-white);
             font-weight: 700;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden; /* Para o efeito de trilha */
         }
+
+        /* Novo estilo para o ícone abstrato de "trilha" dentro do logo */
+        .logo-icon::before {
+            content: '';
+            position: absolute;
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            border: 3px solid var(--color-white);
+            border-left-color: transparent;
+            border-bottom-color: transparent;
+            transform: rotate(45deg);
+            opacity: 0.8;
+        }
+
         .logo-text {
             font-family: 'Montserrat', sans-serif;
             font-size: 1.8rem; /* Ajustado */
@@ -268,10 +286,24 @@
             padding: 1rem 1.25rem;
             margin-bottom: 0.85rem;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column; /* Coluna para melhor organização de info */
+            align-items: flex-start; /* Alinha texto à esquerda */
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
             font-size: 1.05rem;
+        }
+        .participants-list li div {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            align-items: center;
+        }
+        .participants-list li .participant-info {
+            font-weight: 600;
+            color: var(--color-neutral-gray);
+            margin-bottom: 0.5rem;
+        }
+        .participants-list li .participant-info strong {
+            color: var(--color-primary-blue);
         }
         .participants-list li:last-child {
             margin-bottom: 0;
@@ -279,10 +311,16 @@
         .participants-list .status-pending {
             color: var(--color-error-text);
             font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         .participants-list .status-confirmed {
             color: var(--color-success-green);
             font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         /* Grid para números disponíveis */
@@ -542,18 +580,18 @@
 <body>
     <div class="main-wrapper">
         <header class="header">
-            <div class="logo">
-                <div class="logo-icon">🏍️❤️</div>
+            <a href="#" class="logo" id="headerLogoLink">
+                <div class="logo-icon"></div> <!-- Ícone abstrato de trilha/caminho -->
                 <div class="logo-group">
                     <div class="logo-text">BARBOZA</div>
                     <div class="logo-subtitle">Rifa Solidária</div>
                 </div>
-            </div>
+            </a>
             <nav class="main-nav">
                 <ul>
                     <li><a href="#" id="navRifa">Rifa</a></li>
                     <li><a href="#" id="navSobre">Sobre</a></li>
-                    <li><a href="#" id="navAdminLogin">Login Admin</a></li> <!-- Novo link para Login Admin -->
+                    <li><a href="#" id="navAdminLogin">Login Admin</a></li>
                 </ul>
             </nav>
         </header>
@@ -733,6 +771,7 @@
         const navAdminLogin = document.getElementById('navAdminLogin'); // Novo link de navegação
         const footerNavRifa = document.getElementById('footerNavRifa');
         const footerNavSobre = document.getElementById('footerNavSobre');
+        const headerLogoLink = document.getElementById('headerLogoLink'); // Link do logo no header
 
         // Modal de Reserva
         const reserveModal = document.getElementById('reserveModal');
@@ -907,11 +946,19 @@
                 reservedNumbers.forEach(p => {
                     const li = document.createElement('li');
                     li.innerHTML = `
-                        <span><strong>Número #${p.number}:</strong> ${p.takenByName || 'N/A'} (CPF: ${p.takenByCpf || 'N/A'})</span>
-                        <span class="${p.status === 'pending' ? 'status-pending' : 'status-confirmed'}">
-                            ${p.status === 'pending' ? 'Pendente' : 'Confirmado'}
-                        </span>
-                        ${p.status === 'pending' ? `<button data-number="${p.number}" class="confirm-payment-btn btn-tertiary ml-2 text-xs">Confirmar Pagamento</button>` : ''}
+                        <div class="w-full">
+                            <span class="font-bold text-primary-blue">Número #${p.number}:</span>
+                            <span class="text-neutral-gray text-sm ml-2">
+                                Nome: <strong class="font-semibold">${p.takenByName || 'N/A'}</strong>
+                                CPF: <strong class="font-semibold">${p.takenByCpf || 'N/A'}</strong>
+                            </span>
+                        </div>
+                        <div class="w-full flex justify-end items-center mt-2">
+                            <span class="${p.status === 'pending' ? 'status-pending' : 'status-confirmed'}">
+                                ${p.status === 'pending' ? 'Pendente' : 'Confirmado'}
+                            </span>
+                            ${p.status === 'pending' ? `<button data-number="${p.number}" class="confirm-payment-btn btn-tertiary ml-2 text-xs">Confirmar Pagamento</button>` : ''}
+                        </div>
                     `;
                     adminParticipantsUl.appendChild(li);
                 });
@@ -1320,6 +1367,13 @@
         footerNavSobre.addEventListener('click', (e) => {
             e.preventDefault();
             showScreen(aboutScreen, navSobre);
+        });
+
+        // Adiciona listener para o clique no logo no header
+        headerLogoLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Ao clicar no logo, sempre volta para a tela principal da rifa para o usuário comum
+            showScreen(userRaffleScreen, navRifa);
         });
 
         // --- Inicialização ---
