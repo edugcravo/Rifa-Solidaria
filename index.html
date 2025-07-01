@@ -640,9 +640,9 @@
                 <!-- Tela da Rifa (Usuário - Tela Principal) -->
                 <div id="userRaffleScreen" class="screen active">
                     <div id="funnyImageContainer" class="funny-image-container">
-                        <img src="https://placehold.co/120x120/3A60A0/FFFFFF?text=BARBOZA" alt="Imagem Engraçada/Motivacional" onerror="this.onerror=null;this.src='https://placehold.co/120x120/3A60A0/FFFFFF?text=BARBOZA';">
+                        <img id="dynamicFunnyImage" src="animal.jpeg" alt="Imagem Engraçada/Motivacional" onerror="this.onerror=null;this.src='https://placehold.co/120x120/3A60A0/FFFFFF?text=BARBOZA';">
                     </div>
-                    <h1 class="title-mt">Chegou a Rifa para restaurar o molejo do Barboza (e te dá um prêmio)!</h1>
+                    <h1 class="title-mt">Chegou a Rifa que Salva o Barboza (e te dá um prêmio)!</h1>
                     <p class="subtitle">Ele não viu a fechada, mas você pode ver a sorte! Escolha seu(s) número(s) e garanta que o Barboza volte a pilotar (com mais cuidado, prometemos!).</p><br>
                     <p class="subtitle">Cada número custa apenas R$10. Escolha quantos quiser e ajude a consertar o Barboza (e a moto!).</p>
 
@@ -816,7 +816,13 @@
         // Para o primeiro login, você pode deixar vazio e depois de logar, pegar o UID do console e colocar aqui.
         const ADMIN_UID = 'G2jXmzNyEdbMLMHfPv8FqdnLP153'; // <<< MUDAR AQUI PARA O UID DO SEU ADMIN!
         // CHAVE PIX (exemplo: CPF, e-mail, telefone, chave aleatória)
-        const PIX_KEY = 'sua.chave.pix@exemplo.com'; // <<< MUDAR AQUI PARA A SUA CHAVE PIX!
+        const PIX_KEY = '41996358674'; // <<< MUDAR AQUI PARA A SUA CHAVE PIX!
+
+        // URLs das imagens dinâmicas
+        const IMAGE_BRABO = 'animal.jpeg'; // Imagem para 0 números selecionados
+        const IMAGE_FELIZ = 'animal.jpeg'; // Imagem para 1-5 números selecionados
+        const IMAGE_MUITO_FELIZ = 'animal.jpeg'; // Imagem para >5 números selecionados
+
 
         // --- Elementos do DOM ---
         const globalMessageDiv = document.getElementById('globalMessage');
@@ -859,6 +865,7 @@
         const selectedNumbersDisplay = document.getElementById('selectedNumbersDisplay'); // Novo elemento para exibir números selecionados
         const totalCostDisplay = document.getElementById('totalCostDisplay'); // Novo elemento para exibir o custo total
         const openReserveModalBtn = document.getElementById('openReserveModalBtn'); // Novo botão para abrir modal
+        const dynamicFunnyImage = document.getElementById('dynamicFunnyImage'); // Imagem dinâmica
 
         // Formulário de Admin
         const adminEmailInput = document.getElementById('adminEmail');
@@ -933,6 +940,21 @@
                 selectedNumbersDisplay.textContent = 'Nenhum';
                 totalCostDisplay.textContent = 'R$ 0,00';
                 openReserveModalBtn.disabled = true;
+            }
+            updateFunnyImage(); // Chama a função para atualizar a imagem
+        }
+
+        /**
+         * Atualiza a imagem dinâmica com base na quantidade de números selecionados.
+         */
+        function updateFunnyImage() {
+            const numSelected = currentSelectedNumbers.length;
+            if (numSelected === 0) {
+                dynamicFunnyImage.src = IMAGE_BRABO;
+            } else if (numSelected > 0 && numSelected <= 5) {
+                dynamicFunnyImage.src = IMAGE_FELIZ;
+            } else {
+                dynamicFunnyImage.src = IMAGE_MUITO_FELIZ;
             }
         }
 
@@ -1236,6 +1258,9 @@
             document.querySelectorAll('.number-box.selected').forEach(box => {
                 box.classList.remove('selected');
             });
+            // Garante que o formulário de reserva esteja visível ao fechar o modal
+            reservationForm.classList.remove('hidden');
+            pixPaymentSection.classList.add('hidden');
         });
 
         // Validação de CPF para aceitar apenas números
@@ -1244,11 +1269,12 @@
         });
 
         /**
-         * Prossegue para a seção de pagamento PIX no modal.
+         * Prossegue para a seção de pagamento PIX no modal e tenta reservar os números.
          */
         modalProceedToPixBtn.addEventListener('click', async () => {
             const name = modalUserNameInput.value.trim();
             const cpf = modalUserCpfInput.value.trim();
+            const selectedNumbersToReserve = [...currentSelectedNumbers]; // Cria uma cópia para a transação
 
             if (!name || !cpf) {
                 showGlobalMessage('Por favor, preencha seu Nome Completo e CPF.', true);
@@ -1258,7 +1284,7 @@
                 showGlobalMessage('CPF inválido. Digite apenas os 11 números.', true);
                 return;
             }
-            if (currentSelectedNumbers.length === 0) {
+            if (selectedNumbersToReserve.length === 0) {
                 showGlobalMessage('Nenhum número selecionado para reserva.', true);
                 return;
             }
@@ -1282,11 +1308,61 @@
                 }
             }
 
-            // Esconde o formulário de reserva e mostra a seção PIX
-            reservationForm.classList.add('hidden');
-            pixPaymentSection.classList.remove('hidden');
-            pixKeyDisplay.textContent = PIX_KEY;
-            showGlobalMessage('Agora realize o pagamento via PIX e depois clique em "Confirmar Pagamento no WhatsApp".', false, false);
+            try {
+                // Executa a transação do Firestore para reservar os números
+                await runTransaction(db, async (transaction) => {
+                    const numbersAlreadyTaken = [];
+
+                    for (const num of selectedNumbersToReserve) {
+                        const numberDocRef = doc(db, `artifacts/${appId}/public/data/raffle-numbers`, String(num));
+                        const docSnap = await transaction.get(numberDocRef);
+
+                        if (docSnap.exists() && docSnap.data().status !== 'available') {
+                            // Se o número não estiver disponível, adiciona à lista de já tomados
+                            numbersAlreadyTaken.push(num);
+                        } else {
+                            // Se o número estiver disponível, tenta reservá-lo
+                            transaction.set(numberDocRef, {
+                                number: num,
+                                status: 'pending', // Marca como pendente de pagamento
+                                takenByUid: currentUserId,
+                                takenByName: name,
+                                takenByCpf: cpf,
+                                timestamp: new Date()
+                            }, { merge: true });
+                        }
+                    }
+
+                    if (numbersAlreadyTaken.length > 0) {
+                        // Se algum número já estava tomado, a transação deve ser abortada.
+                        throw new Error(`Ops! O(s) número(s) ${numbersAlreadyTaken.join(', ')} acabou(aram) de ser reservado(s) por outra pessoa. Por favor, escolha outro(s)!`);
+                    }
+                });
+
+                // Se a transação foi bem-sucedida, prossegue para a seção PIX
+                reservationForm.classList.add('hidden');
+                pixPaymentSection.classList.remove('hidden');
+                pixKeyDisplay.textContent = PIX_KEY;
+                showGlobalMessage('Números reservados! Agora realize o pagamento via PIX e depois clique em "Confirmar Pagamento no WhatsApp".', false, false);
+
+            } catch (e) {
+                console.error("Erro ao reservar número(s):", e);
+                // Exibe a mensagem de erro específica da transação
+                if (e.message.includes("acabou(aram) de ser reservado(s)")) {
+                    showGlobalMessage(e.message, true);
+                } else {
+                    showGlobalMessage(`Erro ao reservar número(s). Tente novamente mais tarde.`, true);
+                }
+                // Limpa a seleção e atualiza o grid para que o usuário possa escolher novamente
+                currentSelectedNumbers = [];
+                updateSelectionSummary();
+                document.querySelectorAll('.number-box.selected').forEach(box => {
+                    box.classList.remove('selected');
+                });
+                // Mantém o modal aberto no formulário de reserva
+                reservationForm.classList.remove('hidden');
+                pixPaymentSection.classList.add('hidden');
+            }
         });
 
         /**
@@ -1312,77 +1388,33 @@
         });
 
         /**
-         * Confirma a reserva dos números e envia para o WhatsApp usando uma transação.
+         * Envia a mensagem para o WhatsApp (a reserva já foi feita na etapa anterior).
          */
         modalSendWhatsappBtn.addEventListener('click', async () => {
             const name = modalUserNameInput.value.trim();
             const cpf = modalUserCpfInput.value.trim();
-            const selectedNumbersToReserve = [...currentSelectedNumbers]; // Cria uma cópia para a transação
+            const selectedNumbersFinal = [...currentSelectedNumbers]; // Usa a cópia final dos números reservados
 
-            if (selectedNumbersToReserve.length === 0) {
-                showGlobalMessage('Nenhum número selecionado para reserva.', true);
-                return;
-            }
+            const totalReservedCost = selectedNumbersFinal.length * TICKET_PRICE;
+            
+            // Gera o link do WhatsApp para o comprovante
+            const whatsappMessage = `Olá! Acabei de reservar o(s) número(s) ${selectedNumbersFinal.join(', ')} na rifa para o Barboza, totalizando R$ ${totalReservedCost.toFixed(2).replace('.', ',')}. Meu nome é ${name} (CPF: ${cpf}). Segue o comprovante de pagamento!`;
+            const whatsappLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`;
+            window.open(whatsappLink, '_blank');
+            showGlobalMessage('Agora, por favor, envie o comprovante de pagamento para o WhatsApp para confirmar sua participação! O link já abriu para você. 😉', false, true);
 
-            try {
-                // Executa a transação do Firestore
-                await runTransaction(db, async (transaction) => {
-                    const numbersSuccessfullyReserved = [];
-                    const numbersAlreadyTaken = [];
-
-                    for (const num of selectedNumbersToReserve) {
-                        const numberDocRef = doc(db, `artifacts/${appId}/public/data/raffle-numbers`, String(num));
-                        const docSnap = await transaction.get(numberDocRef);
-
-                        if (docSnap.exists() && docSnap.data().status !== 'available') {
-                            // Se o número não estiver disponível, adiciona à lista de já tomados
-                            numbersAlreadyTaken.push(num);
-                        } else {
-                            // Se o número estiver disponível, tenta reservá-lo
-                            transaction.set(numberDocRef, {
-                                number: num,
-                                status: 'pending', // Marca como pendente de pagamento
-                                takenByUid: currentUserId,
-                                takenByName: name,
-                                takenByCpf: cpf,
-                                timestamp: new Date()
-                            }, { merge: true });
-                            numbersSuccessfullyReserved.push(num);
-                        }
-                    }
-
-                    if (numbersAlreadyTaken.length > 0) {
-                        // Se algum número já estava tomado, a transação deve ser abortada ou sinalizada.
-                        // Para este caso, vamos lançar um erro para que a transação seja retentada ou falhe.
-                        // O Firestore tentará a transação novamente se houver conflito.
-                        // Se persistir, o erro será capturado pelo catch externo.
-                        throw new Error(`Alguns números já foram reservados: ${numbersAlreadyTaken.join(', ')}. Por favor, escolha outros.`);
-                    }
-                });
-
-                const totalReservedCost = selectedNumbersToReserve.length * TICKET_PRICE;
-                showGlobalMessage(`Parabéns, ${name}! Seu(s) número(s) ${selectedNumbersToReserve.join(', ')} foi(ram) reservado(s) para você! Total: R$ ${totalReservedCost.toFixed(2).replace('.', ',')}`, false, true);
-                reserveModal.classList.add('hidden'); // Fecha o modal
-                modalUserNameInput.value = '';
-                modalUserCpfInput.value = '';
-                currentSelectedNumbers = []; // Limpa os números selecionados
-                updateSelectionSummary(); // Atualiza o display e desabilita o botão
-
-                // Gera o link do WhatsApp para o comprovante
-                const whatsappMessage = `Olá! Acabei de reservar o(s) número(s) ${selectedNumbersToReserve.join(', ')} na rifa para o Barboza, totalizando R$ ${totalReservedCost.toFixed(2).replace('.', ',')}. Meu nome é ${name} (CPF: ${cpf}). Segue o comprovante de pagamento!`;
-                const whatsappLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`;
-                window.open(whatsappLink, '_blank');
-                showGlobalMessage('Agora, por favor, envie o comprovante de pagamento para o WhatsApp para confirmar sua participação! O link já abriu para você. 😉', false, true);
-
-            } catch (e) {
-                console.error("Erro ao reservar número(s):", e);
-                // Verifica se o erro é a mensagem que lançamos sobre números já tomados
-                if (e.message.includes("Alguns números já foram reservados")) {
-                    showGlobalMessage(e.message, true);
-                } else {
-                    showGlobalMessage(`Erro ao reservar número(s). Tente novamente mais tarde.`, true);
-                }
-            }
+            // Fecha o modal e limpa a seleção após o envio do WhatsApp
+            reserveModal.classList.add('hidden');
+            modalUserNameInput.value = '';
+            modalUserCpfInput.value = '';
+            currentSelectedNumbers = []; // Limpa os números selecionados
+            updateSelectionSummary(); // Atualiza o display e desabilita o botão
+            document.querySelectorAll('.number-box.selected').forEach(box => {
+                box.classList.remove('selected');
+            });
+             // Garante que o formulário de reserva esteja visível ao fechar o modal
+            reservationForm.classList.remove('hidden');
+            pixPaymentSection.classList.add('hidden');
         });
 
         /**
