@@ -640,9 +640,9 @@
                 <!-- Tela da Rifa (Usuário - Tela Principal) -->
                 <div id="userRaffleScreen" class="screen active">
                     <div id="funnyImageContainer" class="funny-image-container">
-                        <img src="animal.jpeg" alt="Imagem Engraçada/Motivacional" onerror="this.onerror=null;this.src='https://placehold.co/120x120/3A60A0/FFFFFF?text=BARBOZA';">
+                        <img src="https://placehold.co/120x120/3A60A0/FFFFFF?text=BARBOZA" alt="Imagem Engraçada/Motivacional" onerror="this.onerror=null;this.src='https://placehold.co/120x120/3A60A0/FFFFFF?text=BARBOZA';">
                     </div>
-                    <h1 class="title-mt">Chegou a Rifa que Salva o Barboza (e te dá um prêmio)!</h1>
+                    <h1 class="title-mt">Chegou a Rifa para restaurar o molejo do Barboza (e te dá um prêmio)!</h1>
                     <p class="subtitle">Ele não viu a fechada, mas você pode ver a sorte! Escolha seu(s) número(s) e garanta que o Barboza volte a pilotar (com mais cuidado, prometemos!).</p><br>
                     <p class="subtitle">Cada número custa apenas R$10. Escolha quantos quiser e ajude a consertar o Barboza (e a moto!).</p>
 
@@ -781,7 +781,7 @@
         // Importa os módulos necessários do Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, query, onSnapshot, addDoc, deleteDoc, doc, setDoc, getDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, query, onSnapshot, addDoc, deleteDoc, doc, setDoc, getDoc, getDocs, where, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Variáveis globais do ambiente Canvas (FORNECIDAS AUTOMATICAMENTE)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -816,7 +816,7 @@
         // Para o primeiro login, você pode deixar vazio e depois de logar, pegar o UID do console e colocar aqui.
         const ADMIN_UID = 'G2jXmzNyEdbMLMHfPv8FqdnLP153'; // <<< MUDAR AQUI PARA O UID DO SEU ADMIN!
         // CHAVE PIX (exemplo: CPF, e-mail, telefone, chave aleatória)
-        const PIX_KEY = '41996358674'; // <<< MUDAR AQUI PARA A SUA CHAVE PIX!
+        const PIX_KEY = 'sua.chave.pix@exemplo.com'; // <<< MUDAR AQUI PARA A SUA CHAVE PIX!
 
         // --- Elementos do DOM ---
         const globalMessageDiv = document.getElementById('globalMessage');
@@ -1312,37 +1312,56 @@
         });
 
         /**
-         * Confirma a reserva dos números e envia para o WhatsApp.
+         * Confirma a reserva dos números e envia para o WhatsApp usando uma transação.
          */
         modalSendWhatsappBtn.addEventListener('click', async () => {
             const name = modalUserNameInput.value.trim();
             const cpf = modalUserCpfInput.value.trim();
-            const selectedNumbers = [...currentSelectedNumbers]; // Cria uma cópia para evitar mutação durante o loop
+            const selectedNumbersToReserve = [...currentSelectedNumbers]; // Cria uma cópia para a transação
+
+            if (selectedNumbersToReserve.length === 0) {
+                showGlobalMessage('Nenhum número selecionado para reserva.', true);
+                return;
+            }
 
             try {
-                const reservationPromises = selectedNumbers.map(async (num) => {
-                    const numberDocRef = doc(db, `artifacts/${appId}/public/data/raffle-numbers`, String(num));
-                    const docSnap = await getDoc(numberDocRef);
+                // Executa a transação do Firestore
+                await runTransaction(db, async (transaction) => {
+                    const numbersSuccessfullyReserved = [];
+                    const numbersAlreadyTaken = [];
 
-                    if (docSnap.exists() && docSnap.data().status !== 'available') {
-                        throw new Error(`O número #${num} já foi reservado.`);
+                    for (const num of selectedNumbersToReserve) {
+                        const numberDocRef = doc(db, `artifacts/${appId}/public/data/raffle-numbers`, String(num));
+                        const docSnap = await transaction.get(numberDocRef);
+
+                        if (docSnap.exists() && docSnap.data().status !== 'available') {
+                            // Se o número não estiver disponível, adiciona à lista de já tomados
+                            numbersAlreadyTaken.push(num);
+                        } else {
+                            // Se o número estiver disponível, tenta reservá-lo
+                            transaction.set(numberDocRef, {
+                                number: num,
+                                status: 'pending', // Marca como pendente de pagamento
+                                takenByUid: currentUserId,
+                                takenByName: name,
+                                takenByCpf: cpf,
+                                timestamp: new Date()
+                            }, { merge: true });
+                            numbersSuccessfullyReserved.push(num);
+                        }
                     }
 
-                    // Atualiza o documento no Firestore
-                    await setDoc(numberDocRef, {
-                        number: num,
-                        status: 'pending', // Marca como pendente de pagamento
-                        takenByUid: currentUserId,
-                        takenByName: name,
-                        takenByCpf: cpf,
-                        timestamp: new Date()
-                    }, { merge: true });
+                    if (numbersAlreadyTaken.length > 0) {
+                        // Se algum número já estava tomado, a transação deve ser abortada ou sinalizada.
+                        // Para este caso, vamos lançar um erro para que a transação seja retentada ou falhe.
+                        // O Firestore tentará a transação novamente se houver conflito.
+                        // Se persistir, o erro será capturado pelo catch externo.
+                        throw new Error(`Alguns números já foram reservados: ${numbersAlreadyTaken.join(', ')}. Por favor, escolha outros.`);
+                    }
                 });
 
-                await Promise.all(reservationPromises);
-
-                const totalReservedCost = selectedNumbers.length * TICKET_PRICE;
-                showGlobalMessage(`Parabéns, ${name}! Seu(s) número(s) ${selectedNumbers.join(', ')} foi(ram) reservado(s) para você! Total: R$ ${totalReservedCost.toFixed(2).replace('.', ',')}`, false, true);
+                const totalReservedCost = selectedNumbersToReserve.length * TICKET_PRICE;
+                showGlobalMessage(`Parabéns, ${name}! Seu(s) número(s) ${selectedNumbersToReserve.join(', ')} foi(ram) reservado(s) para você! Total: R$ ${totalReservedCost.toFixed(2).replace('.', ',')}`, false, true);
                 reserveModal.classList.add('hidden'); // Fecha o modal
                 modalUserNameInput.value = '';
                 modalUserCpfInput.value = '';
@@ -1350,14 +1369,19 @@
                 updateSelectionSummary(); // Atualiza o display e desabilita o botão
 
                 // Gera o link do WhatsApp para o comprovante
-                const whatsappMessage = `Olá! Acabei de reservar o(s) número(s) ${selectedNumbers.join(', ')} na rifa para o Barboza, totalizando R$ ${totalReservedCost.toFixed(2).replace('.', ',')}. Meu nome é ${name} (CPF: ${cpf}). Segue o comprovante de pagamento!`;
+                const whatsappMessage = `Olá! Acabei de reservar o(s) número(s) ${selectedNumbersToReserve.join(', ')} na rifa para o Barboza, totalizando R$ ${totalReservedCost.toFixed(2).replace('.', ',')}. Meu nome é ${name} (CPF: ${cpf}). Segue o comprovante de pagamento!`;
                 const whatsappLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`;
                 window.open(whatsappLink, '_blank');
                 showGlobalMessage('Agora, por favor, envie o comprovante de pagamento para o WhatsApp para confirmar sua participação! O link já abriu para você. 😉', false, true);
 
             } catch (e) {
                 console.error("Erro ao reservar número(s):", e);
-                showGlobalMessage(`Erro ao reservar número(s). ${e.message || 'Tente novamente mais tarde.'}`, true);
+                // Verifica se o erro é a mensagem que lançamos sobre números já tomados
+                if (e.message.includes("Alguns números já foram reservados")) {
+                    showGlobalMessage(e.message, true);
+                } else {
+                    showGlobalMessage(`Erro ao reservar número(s). Tente novamente mais tarde.`, true);
+                }
             }
         });
 
