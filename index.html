@@ -865,6 +865,8 @@
         const modalMessageDiv = document.getElementById('modalMessage'); // Novo elemento para mensagens dentro do modal
 
         let currentSelectedNumbers = []; // Armazena os números selecionados no grid (agora um array)
+        let lastReservedNumbers = []; // Armazena os números que foram *realmente* reservados na transação
+        let lastReservedTotalCost = 0; // Armazena o custo total da última reserva bem-sucedida
 
         // Tela da Rifa (Usuário)
         const numbersGrid = document.getElementById('numbersGrid');
@@ -1292,6 +1294,8 @@
             modalUserNameInput.value = '';
             modalUserCpfInput.value = '';
             currentSelectedNumbers = []; // Limpa os números selecionados
+            lastReservedNumbers = []; // Limpa os números da última reserva
+            lastReservedTotalCost = 0; // Limpa o custo da última reserva
             updateSelectionSummary(); // Atualiza o display e desabilita o botão
             // Remover a seleção visual de todos os números no grid
             document.querySelectorAll('.number-box.selected').forEach(box => {
@@ -1352,16 +1356,17 @@
                 // Executa a transação do Firestore para reservar os números
                 await runTransaction(db, async (transaction) => {
                     const numbersAlreadyTaken = [];
-                    const numbersData = new Map(); // Para armazenar os dados lidos
+                    const numbersToUpdate = []; // Armazena os números que serão reservados
 
                     // FASE 1: LEITURAS
                     for (const num of selectedNumbersToReserve) {
                         const numberDocRef = doc(db, `artifacts/${appId}/public/data/raffle-numbers`, String(num));
                         const docSnap = await transaction.get(numberDocRef);
-                        numbersData.set(num, docSnap); // Armazena o snapshot para uso posterior
                         
                         if (docSnap.exists() && docSnap.data().status !== 'available') {
                             numbersAlreadyTaken.push(num);
+                        } else {
+                            numbersToUpdate.push(num); // Adiciona para a fase de escrita
                         }
                     }
 
@@ -1372,9 +1377,8 @@
                     }
 
                     // FASE 2: ESCRITAS (somente se todas as leituras foram bem-sucedidas e não há conflitos)
-                    for (const num of selectedNumbersToReserve) {
+                    for (const num of numbersToUpdate) { // Itera apenas sobre os números que podem ser reservados
                         const numberDocRef = doc(db, `artifacts/${appId}/public/data/raffle-numbers`, String(num));
-                        // Não precisamos verificar novamente aqui, pois já fizemos na fase de leitura
                         transaction.set(numberDocRef, {
                             number: num,
                             status: 'pending', // Marca como pendente de pagamento
@@ -1385,6 +1389,10 @@
                         }, { merge: true });
                         console.log(`Reservando número ${num}`);
                     }
+                    
+                    // Se a transação foi bem-sucedida, armazena os números e o custo para o WhatsApp
+                    lastReservedNumbers = [...selectedNumbersToReserve]; // Armazena a lista completa que o usuário tentou reservar
+                    lastReservedTotalCost = selectedNumbersToReserve.length * TICKET_PRICE;
                 });
 
                 // Se a transação foi bem-sucedida, prossegue para a seção PIX
@@ -1455,12 +1463,12 @@
         modalSendWhatsappBtn.addEventListener('click', async () => {
             const name = modalUserNameInput.value.trim();
             const cpf = modalUserCpfInput.value.trim();
-            const selectedNumbersFinal = [...currentSelectedNumbers]; // Usa a cópia final dos números reservados
-
-            const totalReservedCost = selectedNumbersFinal.length * TICKET_PRICE;
+            // Usa as variáveis que armazenam os números e o custo da última reserva bem-sucedida
+            const selectedNumbersForWhatsapp = [...lastReservedNumbers]; 
+            const totalCostForWhatsapp = lastReservedTotalCost;
             
             // Gera o link do WhatsApp para o comprovante
-            const whatsappMessage = `Olá! Acabei de reservar o(s) número(s) ${selectedNumbersFinal.join(', ')} na rifa para o Barboza, totalizando R$ ${totalReservedCost.toFixed(2).replace('.', ',')}. Meu nome é ${name} (CPF: ${cpf}). Segue o comprovante de pagamento!`;
+            const whatsappMessage = `Olá! Acabei de reservar o(s) número(s) ${selectedNumbersForWhatsapp.join(', ')} na rifa para o Barboza, totalizando R$ ${totalCostForWhatsapp.toFixed(2).replace('.', ',')}. Meu nome é ${name} (CPF: ${cpf}). Segue o comprovante de pagamento!`;
             const whatsappLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`;
             window.open(whatsappLink, '_blank');
             showGlobalMessage('Agora, por favor, envie o comprovante de pagamento para o WhatsApp para confirmar sua participação! O link já abriu para você. 😉', false, true);
@@ -1470,6 +1478,8 @@
             modalUserNameInput.value = '';
             modalUserCpfInput.value = '';
             currentSelectedNumbers = []; // Limpa os números selecionados
+            lastReservedNumbers = []; // Limpa os números da última reserva
+            lastReservedTotalCost = 0; // Limpa o custo da última reserva
             updateSelectionSummary(); // Atualiza o display e desabilita o botão
             document.querySelectorAll('.number-box.selected').forEach(box => {
                 box.classList.remove('selected');
