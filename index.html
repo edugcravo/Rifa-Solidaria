@@ -1352,34 +1352,38 @@
                 // Executa a transação do Firestore para reservar os números
                 await runTransaction(db, async (transaction) => {
                     const numbersAlreadyTaken = [];
+                    const numbersData = new Map(); // Para armazenar os dados lidos
 
+                    // FASE 1: LEITURAS
                     for (const num of selectedNumbersToReserve) {
                         const numberDocRef = doc(db, `artifacts/${appId}/public/data/raffle-numbers`, String(num));
                         const docSnap = await transaction.get(numberDocRef);
-                        // Log para depuração: verifica o status do número antes de tentar reservar
-                        console.log(`Verificando número ${num}: Status atual: ${docSnap.exists() ? docSnap.data().status : 'não existe'}`);
-
+                        numbersData.set(num, docSnap); // Armazena o snapshot para uso posterior
+                        
                         if (docSnap.exists() && docSnap.data().status !== 'available') {
-                            // Se o número não estiver disponível, adiciona à lista de já tomados
                             numbersAlreadyTaken.push(num);
-                        } else {
-                            // Se o número estiver disponível, tenta reservá-lo
-                            transaction.set(numberDocRef, {
-                                number: num,
-                                status: 'pending', // Marca como pendente de pagamento
-                                takenByUid: currentUserId,
-                                takenByName: name,
-                                takenByCpf: cpf,
-                                timestamp: new Date()
-                            }, { merge: true });
-                            console.log(`Tentando reservar número ${num}`);
                         }
                     }
 
+                    // Se houver números já tomados, aborta a transação aqui
                     if (numbersAlreadyTaken.length > 0) {
                         console.warn("Números já tomados durante a transação:", numbersAlreadyTaken);
-                        // Se algum número já estava tomado, a transação deve ser abortada.
                         throw new Error(`Ah, não! O(s) número(s) ${numbersAlreadyTaken.join(', ')} acabou(aram) de ser reservado(s) por outra pessoa mais rápida que você! 😅 Por favor, escolha outro(s)!`);
+                    }
+
+                    // FASE 2: ESCRITAS (somente se todas as leituras foram bem-sucedidas e não há conflitos)
+                    for (const num of selectedNumbersToReserve) {
+                        const numberDocRef = doc(db, `artifacts/${appId}/public/data/raffle-numbers`, String(num));
+                        // Não precisamos verificar novamente aqui, pois já fizemos na fase de leitura
+                        transaction.set(numberDocRef, {
+                            number: num,
+                            status: 'pending', // Marca como pendente de pagamento
+                            takenByUid: currentUserId,
+                            takenByName: name,
+                            takenByCpf: cpf,
+                            timestamp: new Date()
+                        }, { merge: true });
+                        console.log(`Reservando número ${num}`);
                     }
                 });
 
@@ -1394,17 +1398,19 @@
 
                 let errorMessageForUser = `Erro ao reservar número(s). Tente novamente mais tarde.`;
 
-                if (e instanceof Error && e.message) {
-                    if (e.message.includes("acabou(aram) de ser reservado(s)")) {
-                        errorMessageForUser = e.message; // Usa nossa mensagem personalizada
-                    } else if (e.code === 'unavailable' || e.code === 'aborted' || e.code === 'PERMISSION_DENIED') { // Códigos de erro comuns do Firestore para conflitos ou permissão
-                         errorMessageForUser = `Sinto muito! Houve um problema de conexão, permissão ou alguém foi mais rápido. Por favor, tente novamente.`;
-                    }
-                    else {
-                        errorMessageForUser = `Erro inesperado: ${e.message}. Por favor, tente novamente.`;
+                // Verifica se o erro é a nossa mensagem personalizada
+                if (e instanceof Error && e.message && e.message.includes("acabou(aram) de ser reservado(s)")) {
+                    errorMessageForUser = e.message;
+                } else if (e.code) { // Verifica códigos de erro do Firestore
+                    if (e.code === 'unavailable' || e.code === 'aborted') {
+                        errorMessageForUser = `Sinto muito! Houve um problema de conexão ou alguém foi mais rápido. Por favor, tente novamente.`;
+                    } else if (e.code === 'PERMISSION_DENIED') {
+                        errorMessageForUser = `Erro de permissão: Você não tem autorização para realizar esta operação.`;
+                    } else {
+                        errorMessageForUser = `Erro do Firestore (${e.code}): Por favor, tente novamente.`;
                     }
                 } else {
-                    errorMessageForUser = `Erro desconhecido ao reservar números. Por favor, tente novamente.`;
+                    errorMessageForUser = `Erro desconhecido: ${e.message || 'Por favor, tente novamente.'}`;
                 }
                 
                 showModalMessage(errorMessageForUser, true); // Exibe a mensagem no modal
